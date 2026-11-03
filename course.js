@@ -20,7 +20,7 @@
       else section.open=defaultOpen.get(section.id);
     }
     document.getElementById('empty-state').hidden=count!==0;
-    document.getElementById('filter-result').textContent=(query||filter!=='all')?'Найдено тем: '+count:rows.length+' тем в программе · Доступно уроков: '+rows.filter(r=>r.dataset.status==='ready').length;
+    document.getElementById('filter-result').textContent=(query||filter!=='all')?'Найдено тем: '+count:rows.length+' тем в программе';
     for(const button of buttons)button.setAttribute('aria-pressed',String(button.dataset.filter===filter));
   }
   search.addEventListener('input',applyFilters);
