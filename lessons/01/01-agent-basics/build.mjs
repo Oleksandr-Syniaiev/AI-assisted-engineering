@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertSafeUrl } from '../../../scripts/safe-url.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 const esc = s => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
@@ -9,7 +10,7 @@ function inline(s) {
   s=s.replace(/`([^`]+)`/g,(_,c)=>`\u0000${codes.push('<code>'+esc(c)+'</code>')-1}\u0000`);
   s=esc(s).replace(/\[([^\]]+)\]\(([^\s)]+)\)/g,(_,label,url)=>{
     const href=url.replace(/^references\.md$/,'references.html').replace(/^exercises\.md$/,'exercises.html');
-    if(!/^(https:\/\/|[a-zA-Z0-9._/#-])/.test(href))throw Error('Unsupported URL');
+    assertSafeUrl(href);
     return `<a href="${href}"${href.startsWith('https:')?' target="_blank" rel="noopener noreferrer"':''}>${label}</a>`;
   }).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   return s.replace(/\u0000(\d+)\u0000/g,(_,n)=>codes[+n]);

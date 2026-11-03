@@ -2,8 +2,11 @@
 from pathlib import Path
 import html
 import re
+import sys
 
 BASE=Path(__file__).parent
+sys.path.insert(0, str(BASE.parents[1] / 'scripts'))
+from safe_url import assert_safe_url
 DIRS=sorted(p for p in BASE.iterdir() if p.is_dir() and re.match(r'^\d\d-',p.name))
 CSS='''*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#24313e;background:#f5f4ef;font:18px/1.75 system-ui,sans-serif}a{color:#126359;text-underline-offset:3px}header{max-width:1240px;margin:auto;padding:28px 32px;border-bottom:1px solid #d5dcd5}header nav{display:flex;gap:24px;flex-wrap:wrap}.layout{max-width:1240px;margin:auto;display:grid;grid-template-columns:250px minmax(0,1fr);gap:50px;padding:36px 32px}aside{font-size:14px;position:sticky;top:20px;align-self:start;max-height:92vh;overflow:auto}aside a{display:block;padding:7px 0}main{min-width:0;max-width:850px}h1{font-size:clamp(30px,4vw,46px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 28px}h2{line-height:1.3;font-size:28px;margin-top:60px;padding-top:20px;border-top:1px solid #ccd8d0;scroll-margin-top:15px}h3{font-size:21px;margin-top:30px}p{margin:20px 0}pre{background:#1f2e36;color:#eef4f2;padding:22px;border-radius:10px;overflow:auto;line-height:1.5;font-size:15px}code{font-family:ui-monospace,Consolas,monospace}p code,td code{background:#e4ebe6;padding:2px 4px;border-radius:3px}table{border-collapse:collapse;font-size:15px;line-height:1.5;width:100%}th,td{padding:12px 14px;text-align:left;vertical-align:top;border:1px solid #ccd8d0}th{background:#e6ece5}.table{overflow:auto;margin:24px 0}footer{margin-top:55px;padding:30px 0;border-top:1px solid #ccd8d0;font-size:15px}.skip{position:absolute;left:-9999px}.skip:focus{left:10px;background:white;padding:10px}a:focus-visible{outline:3px solid #cb6b32;outline-offset:4px}li{margin:8px 0}@media(max-width:850px){.layout{display:block;padding:24px 18px}aside{position:static;max-height:none;border-bottom:1px solid #ccd8d0;padding-bottom:20px;margin-bottom:30px}aside a{display:inline-block;margin-right:15px;font-size:13px}header{padding:20px 18px}body{font-size:17px}h2{font-size:25px}th,td{min-width:160px}}@media print{aside,header,footer{display:none}.layout{display:block;padding:0}body{background:white;font-size:12pt}pre{white-space:pre-wrap;color:black;background:#eee}h2{break-after:avoid}}'''
 
@@ -16,7 +19,7 @@ def inline(value):
     value=html.escape(value)
     def anchor(m):
         label,url=m[1],html.unescape(m[2])
-        if not re.match(r'^(https://|[\w./#-])',url):raise ValueError(url)
+        assert_safe_url(url)
         url=re.sub(r'\.md(?=$|#)','.html',url)
         if url=='lesson.html' or url.startswith('lesson.html#'):url=url.replace('lesson.html','index.html',1)
         return '<a href="'+html.escape(url,quote=True)+'">'+label+'</a>'

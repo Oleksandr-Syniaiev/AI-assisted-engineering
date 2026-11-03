@@ -1,0 +1,29 @@
+name: Security checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  security:
+    name: Security checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Test security boundaries
+        run: node --test tests/security.test.mjs
+      - name: Test Python lesson renderers
+        run: python3 tests/security_python_test.py
+      - name: Check section 1 links and preserved lesson files
+        run: node lessons/01/verify.mjs
+      - name: Test the local teaching application
+        run: node --test lessons/01/demo-workbench/workbench.test.mjs

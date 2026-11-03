@@ -5,6 +5,17 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { validateTitle } from './policy.mjs';
 
+// Keep the teaching stand self-contained when its folder is copied.
+function isLocalRequest(req) {
+  const host = req.headers.host, origin = req.headers.origin;
+  if (typeof host !== 'string' || !/^(?:localhost|127\.0\.0\.1)(?::[0-9]{1,5})?$/i.test(host)) return false;
+  if (origin === undefined) return true;
+  try {
+    const parsed = new URL(origin);
+    return parsed.origin === origin && parsed.protocol === 'http:' && parsed.host.toLowerCase() === host.toLowerCase();
+  } catch { return false; }
+}
+
 const here = path.dirname(fileURLToPath(import.meta.url));
 export function createWorkbench(dataFile = path.join(here, 'data', 'requests.json')) {
   // Синхронное хранилище намеренно: один процесс, маленький учебный набор.
@@ -25,6 +36,7 @@ export function createWorkbench(dataFile = path.join(here, 'data', 'requests.jso
       res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(JSON.stringify(value));
     };
+    if (!isLocalRequest(req)) return send(403, { error: 'Недопустимый Host или Origin' });
     try {
       if (req.method === 'GET' && req.url === '/') {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });

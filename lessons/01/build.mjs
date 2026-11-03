@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { assertSafeUrl } from '../../scripts/safe-url.mjs';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const dirs = fs.readdirSync(root).filter(n => /^\d\d-/.test(n)).sort();
 const css = fs.readFileSync(path.join(root, dirs[0], 'reader.css'), 'utf8');
@@ -13,7 +14,7 @@ function inline(text) {
   const tokens = [];
   let s = text.replace(/`([^`]+)`/g, (_, code) => `\u0000${tokens.push('<code>' + esc(code) + '</code>') - 1}\u0000`);
   s = s.replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (_, label, url) => {
-    if (!/^(https?:\/\/|[a-zA-Z0-9._/#-])/.test(url)) throw Error('Unsupported link: ' + url);
+    assertSafeUrl(url);
     const href = url.replace(/^references\.md$/, 'references.html').replace(/^exercises\.md$/, 'exercises.html');
     return `\u0000${tokens.push(`<a href="${esc(href)}"${/^https?:/.test(href) ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(label)}</a>`) - 1}\u0000`;
   });

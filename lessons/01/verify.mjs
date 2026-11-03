@@ -21,8 +21,11 @@ function checkLink(file, href) {
 }
 const baseline = JSON.parse(fs.readFileSync(path.join(root, 'benchmark-hashes.json'), 'utf8').replace(/^\uFEFF/,''));
 for (const item of baseline) {
-  const file = path.join(root, dirs[0], item.Path);
-  const digest = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').toUpperCase();
+  const file = path.join(root, dirs[0], item.Path.replaceAll('\\', '/'));
+  const bytes = fs.readFileSync(file);
+  // Git may use CRLF on Windows and LF on Linux; preserve binary bytes exactly.
+  const canonical = bytes.includes(0) ? bytes : Buffer.from(bytes.toString('utf8').replaceAll('\r\n', '\n'));
+  const digest = crypto.createHash('sha256').update(canonical).digest('hex').toUpperCase();
   if (digest !== item.SHA256) issues.push('Benchmark changed: ' + item.Path);
 }
 const curriculum = fs.readFileSync(path.join(project,'CURRICULUM.md'),'utf8').split(/Раздел 2/)[0].split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('Раздел'));
